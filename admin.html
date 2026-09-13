@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wad Dream Room NJ — Private Admin</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#fff5f9;color:#2b2026}main{max-width:1000px;margin:auto;padding:25px 18px}
+.hero,.panel,.booking,.login{background:#fff;border:1px solid #ead6df;border-radius:20px;padding:22px;margin-bottom:16px}.hero{text-align:center}.hero h1{font:40px Georgia}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{background:#fff;border:1px solid #ead6df;border-radius:16px;padding:18px}
+.booking{display:grid;grid-template-columns:1fr auto;gap:20px}.status{display:inline-block;padding:6px 11px;border-radius:20px;background:#fff0f5;color:#c95786;font-weight:800;font-size:12px}
+button{padding:10px 14px;border-radius:18px;border:0;cursor:pointer;font-weight:800}.confirm{background:#c95786;color:#fff}.decline{background:#fff;border:2px solid #c95786;color:#c95786}.delete{background:#eee;color:#555}
+input{width:100%;box-sizing:border-box;margin:6px 0 12px;padding:12px;border:1px solid #d9c5ce;border-radius:11px}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.hidden{display:none}.muted{color:#76656d}
+@media(max-width:700px){.grid,.booking{grid-template-columns:1fr}}
+</style></head><body><main>
+<div class="hero"><h1>Wad Dream Room NJ</h1><p>Private Booking Admin</p></div>
+<div id="login" class="login"><h2>Admin Login</h2><p class="muted">Admin email: maysonguirand7@gmail.com. Create the account once, confirm your email if requested, then log in.</p>
+<label>Email<input id="email" type="email" autocomplete="username"></label>
+<label>Password<input id="password" type="password" autocomplete="current-password"></label>
+<div class="actions"><button class="confirm" onclick="login()">Log In</button><button class="decline" onclick="signup()">Create Admin Account</button></div>
+<p id="msg" class="muted"></p></div>
+<div id="app" class="hidden"><div class="actions" style="justify-content:flex-end"><button class="delete" onclick="logout()">Log Out</button></div>
+<div class="grid" id="stats"></div><br><div id="list"></div></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://gabhhpxidubocbgwtggv.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_X_C3SuDQUfiFRnpyhkLdug_1srpNh6A';
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const $=id=>document.getElementById(id);
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+async function login(){const {error}=await db.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(error)$('msg').textContent=error.message;else init()}
+async function signup(){
+ const email=$('email').value.trim(), password=$('password').value;
+ if(!email||!password){$('msg').textContent='Enter your email and a password first.';return}
+ const {data,error}=await db.auth.signUp({email,password});
+ if(error){$('msg').textContent=error.message;return}
+ if(data.session){$('msg').textContent='Account created and you are signed in.';init();return}
+ $('msg').textContent='Account created. Check your email for the confirmation link, then come back and Log In.';
+}
+async function logout(){await db.auth.signOut();showLogin()}
+function showLogin(){$('login').classList.remove('hidden');$('app').classList.add('hidden')}
+async function init(){const {data:{session}}=await db.auth.getSession();if(!session){showLogin();return}$('login').classList.add('hidden');$('app').classList.remove('hidden');render();setInterval(render,10000)}
+async function decide(id,status){const {error}=await db.from('bookings').update({status,decision_at:new Date().toISOString()}).eq('id',id);if(error)alert(error.message);else render()}
+async function removeBooking(id){if(confirm('Delete this booking?')){await db.from('bookings').delete().eq('id',id);render()}}
+async function render(){const {data,error}=await db.from('bookings').select('*').order('created_at',{ascending:false});if(error){$('list').innerHTML='<div class="panel">'+esc(error.message)+'</div>';return}
+$('stats').innerHTML='<div class="stat"><b>'+data.length+'</b><div class="muted">Total Requests</div></div><div class="stat"><b>'+data.filter(x=>x.status==="New").length+'</b><div class="muted">Pending</div></div><div class="stat"><b>'+data.filter(x=>x.status==="Confirmed").length+'</b><div class="muted">Confirmed</div></div>';
+$('list').innerHTML=data.length?data.map(x=>`<div class="booking"><div><span class="status">${esc(x.status)}</span><h2>${esc(x.name)}</h2><p><b>${esc(x.service)}</b><br>📅 ${esc(x.date)} at ${esc(x.time)}<br>📍 ${esc(x.location)}</p><p>📞 ${esc(x.phone)}<br>✉️ ${esc(x.email)}</p><p class="muted">${esc(x.details||'No special requests.')}</p></div><div class="actions"><button class="confirm" onclick="decide(${x.id},'Confirmed')">✓ Confirm</button><button class="decline" onclick="decide(${x.id},'Declined')">✕ Decline</button><button class="delete" onclick="removeBooking(${x.id})">Delete</button></div></div>`).join(''):'<div class="panel" style="text-align:center"><h2>No booking requests yet</h2></div>'}
+init();
+</script></body></html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wad Dream Room NJ — Book</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#fff5f9;color:#2b2026}main{max-width:900px;margin:auto;padding:25px 18px}
+.hero,.panel{background:#fff;border:1px solid #ead6df;border-radius:20px;padding:24px;margin-bottom:18px}.hero{text-align:center}.hero h1{font:42px Georgia}
+.form{display:grid;gap:14px}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}label{font-weight:700;font-size:14px}input,select,textarea{width:100%;margin-top:6px;padding:12px;border:1px solid #d9c5ce;border-radius:11px;font:inherit;box-sizing:border-box}textarea{min-height:90px}
+.btn{background:#c95786;color:#fff;border:0;border-radius:25px;padding:13px 20px;font-weight:800;cursor:pointer}.success{display:none;background:#eefaf2;border:1px solid #bde2ca;padding:15px;border-radius:12px}
+@media(max-width:700px){.two{grid-template-columns:1fr}.hero h1{font-size:34px}}
+</style></head><body><main>
+<div class="hero"><h1>Wad Dream Room NJ ✨</h1><p>NJ Room Decorator • Birthdays • Romantic Setups • Special Occasions</p></div>
+<div class="panel"><h2>New Booking Request</h2>
+<form class="form" id="form">
+<div class="two"><label>Customer Name<input id="name" required></label><label>Phone<input id="phone" type="tel" required></label></div>
+<div class="two"><label>Email<input id="email" type="email" required></label><label>Service<select id="service" required><option value="">Select</option><option>Birthday Setup 🎈</option><option>Romantic Setup ❤️</option><option>Special Occasion ✨</option></select></label></div>
+<div class="two"><label>Location<select id="location" required><option value="">Select</option><option>Hotel</option><option>Home</option><option>Airbnb</option></select></label><label>Date<input id="date" type="date" required></label></div>
+<label>Preferred Time<input id="time" type="time" required></label>
+<label>Setup Details<textarea id="details" placeholder="Theme, colors, decorations, special requests..."></textarea></label>
+<button class="btn">✨ Send Booking Request</button><div id="success" class="success"></div>
+</form></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* Paste your Supabase Project URL and anon/publishable key below. Never put a service_role key here. */
+const SUPABASE_URL = 'https://gabhhpxidubocbgwtggv.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_X_C3SuDQUfiFRnpyhkLdug_1srpNh6A';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $=id=>document.getElementById(id);
+$('date').min=new Date().toISOString().slice(0,10);
+$('form').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const b={name:$('name').value.trim(),phone:$('phone').value.trim(),email:$('email').value.trim(),service:$('service').value,location:$('location').value,date:$('date').value,time:$('time').value,details:$('details').value.trim(),status:'New'};
+ const {error}=await db.from('bookings').insert(b);
+ if(error){alert('Booking could not be sent yet. Please check the Supabase connection.');console.error(error);return}
+ $('success').style.display='block';
+ $('success').innerHTML='<b>Booking request sent! ✨</b><br>Your request is waiting for Wad Dream Room NJ to confirm or decline it.';
+ e.target.reset();
+});
+</script></body></html>
